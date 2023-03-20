@@ -1,70 +1,71 @@
-# Getting Started with Create React App
+[![npm (scoped)](https://img.shields.io/npm/v/@apideck/better-ajv-errors?color=brightgreen)](https://npmjs.com/@apideck/better-ajv-errors) [![npm](https://img.shields.io/npm/dm/@apideck/better-ajv-errors)](https://npmjs.com/@apideck/better-ajv-errors) [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/apideck-libraries/better-ajv-errors/CI)](https://github.com/apideck-libraries/better-ajv-errors/actions/workflows/main.yml?query=branch%3Amain++)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# @apideck/better-ajv-errors 👮‍♀️
 
-## Available Scripts
+> Human-friendly JSON Schema validation for APIs
 
-In the project directory, you can run:
 
-### `npm start`
+- Readable and helpful [ajv](https://github.com/ajv-validator/ajv) errors
+- API-friendly format
+- Suggestions for spelling mistakes
+- Minimal footprint: 1.56 kB (gzip + minified)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+![better-ajv-errors output Example](https://user-images.githubusercontent.com/8850410/118274790-e0529e80-b4c5-11eb-8188-9097c8064c61.png)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Install
 
-### `npm test`
+```bash
+$ yarn add @apideck/better-ajv-errors
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+or
 
-### `npm run build`
+```bash
+$ npm i @apideck/better-ajv-errors
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Also make sure that you've installed [ajv](https://www.npmjs.com/package/ajv) at version 8 or higher.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Usage
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+After validating some data with ajv, pass the errors to `betterAjvErrors`
 
-### `npm run eject`
+```ts
+import Ajv from 'ajv';
+import { betterAjvErrors } from '@apideck/better-ajv-errors';
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+// Without allErrors: true, ajv will only return the first error
+const ajv = new Ajv({ allErrors: true });
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+const valid = ajv.validate(schema, data);
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+if (!valid) {
+  const betterErrors = betterAjvErrors({ schema, data, errors: ajv.errors });
+}
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## API
 
-## Learn More
+### betterAjvErrors
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Function that formats ajv validation errors in a human-friendly format.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### Parameters
 
-### Code Splitting
+- `options: BetterAjvErrorsOptions`
+  - `errors: ErrorObject[] | null | undefined` Your ajv errors, you will find these in the `errors` property of your ajv instance (`ErrorObject` is a type from the ajv package).
+  - `data: Object` The data you passed to ajv to be validated.
+  - `schema: JSONSchema` The schema you passed to ajv to validate against.
+  - `basePath?: string` An optional base path to prefix paths returned by `betterAjvErrors`. For example, in APIs, it could be useful to use `'{requestBody}'` or `'{queryParemeters}'` as a basePath. This will make it clear to users where exactly the error occurred.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### Return Value
 
-### Analyzing the Bundle Size
+- `ValidationError[]` Array of formatted errors (properties of `ValidationError` below)
+  - `message: string` Formatted error message
+  - `suggestion?: string` Optional suggestion based on provided data and schema
+  - `path: string` Object path where the error occurred (example: `.foo.bar.0.quz`)
+  - `context: { errorType: DefinedError['keyword']; [additionalContext: string]: unknown }` `errorType` is `error.keyword` proxied from `ajv`. `errorType` can be used as a key for i18n if needed. There might be additional properties on context, based on the type of error.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Related
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [atlassian/better-ajv-errors](https://github.com/atlassian/better-ajv-errors) was the inspiration for this library. Atlassian's library is more focused on CLI errors, this library is focused on developer-friendly API error messages.
